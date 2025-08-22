@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.springframework.context.annotation.Bean;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,7 +37,6 @@ public class Product {
     @ToString.Exclude
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
-
 
     public Product(String name, String description, BigDecimal price, int stock, LocalDateTime createdAt, List<OrderItem> items) {
         this.name = name;
