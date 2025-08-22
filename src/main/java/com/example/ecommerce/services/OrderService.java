@@ -1,6 +1,7 @@
 package com.example.ecommerce.services;
 
 import com.example.ecommerce.models.Order;
+import com.example.ecommerce.models.User;
 import com.example.ecommerce.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,5 +34,18 @@ public class OrderService {
         Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
         order.setStatus(status);
         return orderRepository.save(order);
+    }
+
+    public Order getOrCreateCartForUser(User user) {
+        Optional<Order> existingCart = orderRepository.findByUserAndStatus(user, "CART");
+
+        if (existingCart.isPresent()) {
+            return existingCart.get();
+        } else {
+            Order newCart = new Order();
+            newCart.setUser(user);
+            newCart.setStatus("CART");
+            return orderRepository.save(newCart);
+        }
     }
 }

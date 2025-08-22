@@ -30,7 +30,7 @@ public class OrderItemController {
         return orderItemService.addItemToOrder(orderId, orderItem);
     }
 
-    @PutMapping("/{itemOrder}")
+    @PutMapping("/{itemId}")
     public ResponseEntity<OrderItem> updateOrderItem(@PathVariable Long orderId,
                                                      @PathVariable Long itemId,
                                                      @RequestBody OrderItem itemDetails) {
