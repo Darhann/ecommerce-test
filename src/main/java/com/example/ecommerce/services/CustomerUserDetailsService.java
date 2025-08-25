@@ -19,7 +19,7 @@ public class CustomerUserDetailsService  implements UserDetailsService {
 
     @Override
     @Transactional
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email).orElseThrow(() ->
                 new UsernameNotFoundException(String.format("Пользователь с email '%s' не найден", email)));
 

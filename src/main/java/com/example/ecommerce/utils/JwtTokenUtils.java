@@ -15,14 +15,14 @@ import java.util.stream.Collectors;
 @Component
 public class JwtTokenUtils {
 
-    @Value("${lwt.secret}")
+    @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.lifetime}")
     private Duration jwtLifetime;
 
     public String generateToken(UserDetails userDetails) {
-        Map<String, Objects> claims = new HashMap<>();
+        Map<String, Object> claims = new HashMap<>();
         List<String> rolesList = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
