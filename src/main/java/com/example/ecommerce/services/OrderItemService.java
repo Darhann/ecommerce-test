@@ -7,7 +7,8 @@ import com.example.ecommerce.models.User;
 import com.example.ecommerce.repository.OrderItemRepository;
 import com.example.ecommerce.repository.OrderRepository;
 import com.example.ecommerce.repository.ProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -15,23 +16,19 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 public class OrderItemService {
 
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
     private  final ProductRepository productRepository;
 
-    @Autowired
-    public OrderItemService(OrderItemRepository orderItemRepository, OrderRepository orderRepository, ProductRepository productRepository) {
-        this.orderItemRepository = orderItemRepository;
-        this.orderRepository = orderRepository;
-        this.productRepository = productRepository;
-    }
 
     public List<OrderItem> getItemsByOrderId(Long orderId) {
         return orderItemRepository.findByOrderId(orderId);
     }
 
+    @Transactional
     public OrderItem addItemToOrder(Long orderId, OrderItem item) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
@@ -39,32 +36,58 @@ public class OrderItemService {
         Product product = productRepository.findById(item.getProduct().getId())
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + item.getProduct().getId()));
 
+        if (product.getStock() < item.getQuantity()) {
+            throw new RuntimeException("Недостаточно товара на складе. В налии: " + product.getStock());
+        }
+
+        product.setStock(product.getStock() - item.getQuantity());
+        productRepository.save(product);
+
         item.setOrder(order);
         item.setProduct(product);
-        // TODO добавить логику проверки остатков (stock) и расчета цены
+        item.setPrice(product.getPrice());
+
         return orderItemRepository.save(item);
     }
 
-    public OrderItem updateItemQuantity(Long itemId, int quantity, User currentUser) {
+    @Transactional
+    public OrderItem updateItemQuantity(Long itemId, int newQuantity, User currentUser) {
         OrderItem item = orderItemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("OrderItem not found with id: " + itemId));
+                .orElseThrow(() -> new RuntimeException("Позиция в заказе не найдена с id: " + itemId));
 
         if (!Objects.equals(item.getOrder().getUser().getId(), currentUser.getId())) {
             throw new AccessDeniedException("Вы не можете изменять позиции в чужом заказе");
         }
 
-        item.setQuantity(quantity);
-        // TODO добавить логику пересчитывания цены
+        Product product = item.getProduct();
+        int oldQuantity = item.getQuantity();
+
+        product.setStock(product.getStock() + oldQuantity);
+
+        if (product.getStock() < newQuantity) {
+            product.setStock(product.getStock() - oldQuantity);
+            throw new RuntimeException("Недостаточно товара на складе. В наличии: " + product.getStock());
+        }
+
+        product.setStock(product.getStock() - newQuantity);
+        item.setQuantity(newQuantity);
+
+        productRepository.save(product);
         return orderItemRepository.save(item);
     }
 
+    @Transactional
     public void deleteItem(Long itemId, User currentUser) {
         OrderItem item = orderItemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("OrderItem not found with id: " + itemId));
+                .orElseThrow(() -> new RuntimeException("Позиция в заказе не найдена с id: " + itemId));
 
         if (!Objects.equals(item.getOrder().getUser().getId(), currentUser.getId())) {
             throw new AccessDeniedException("Вы не можете удалять позиции из чужого заказа");
         }
+
+        Product product = item.getProduct();
+        product.setStock(product.getStock() + item.getQuantity());
+        productRepository.save(product);
 
         orderItemRepository.deleteById(itemId);
     }

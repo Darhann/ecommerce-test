@@ -59,4 +59,17 @@ public class OrderController {
         return ResponseEntity.ok(cart);
     }
 
+    @PostMapping("/cart/checkout")
+    public ResponseEntity<Order> checkoutCart(Principal principal) {
+        User currentUser = userService.findByEmail(principal.getName()).orElseThrow(() -> new RuntimeException("Невозможно найти пользователя"));
+
+
+        try {
+            Order processedOrder = orderService.checkout(currentUser);
+            return ResponseEntity.ok(processedOrder);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
 }

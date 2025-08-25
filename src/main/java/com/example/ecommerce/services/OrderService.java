@@ -3,6 +3,7 @@ package com.example.ecommerce.services;
 import com.example.ecommerce.models.Order;
 import com.example.ecommerce.models.User;
 import com.example.ecommerce.repository.OrderRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -47,5 +48,19 @@ public class OrderService {
             newCart.setStatus("CART");
             return orderRepository.save(newCart);
         }
+    }
+
+    @Transactional
+    public Order checkout(User user) {
+        Order cart = getOrCreateCartForUser(user);
+
+        if (cart.getItems() == null || cart.getItems().isEmpty()) {
+            throw new IllegalStateException("Ваша корзина пуста");
+        }
+
+        cart.setStatus("PROCESSING");
+        cart.setCreatedAt(java.time.LocalDateTime.now());
+
+        return orderRepository.save(cart);
     }
 }
