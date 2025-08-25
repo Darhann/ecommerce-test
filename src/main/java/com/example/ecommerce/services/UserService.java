@@ -1,5 +1,6 @@
 package com.example.ecommerce.services;
 
+import com.example.ecommerce.dto.RegistrationUserDTO;
 import com.example.ecommerce.models.User;
 import com.example.ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +29,12 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public User createUser(User user) {
-        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+    public User createUser(RegistrationUserDTO registrationUserDTO) {
+        User user = new User();
+        user.setEmail(registrationUserDTO.getEmail());
+        user.setFullName(registrationUserDTO.getFullName());
+        user.setRole("ROLE_USER");
+        user.setPasswordHash(passwordEncoder.encode(registrationUserDTO.getPassword()));
         return userRepository.save(user);
     }
 
@@ -46,5 +51,9 @@ public class UserService {
 
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 }

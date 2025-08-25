@@ -37,6 +37,7 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders;
 
+
     public User(String fullName, String email, String passwordHash, String role, LocalDateTime createdAt, List<Order> orders) {
         this.fullName = fullName;
         this.email = email;
