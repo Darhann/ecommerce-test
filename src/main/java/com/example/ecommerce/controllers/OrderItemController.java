@@ -1,53 +1,67 @@
 package com.example.ecommerce.controllers;
 
 
+
+import com.example.ecommerce.models.Order;
 import com.example.ecommerce.models.OrderItem;
+import com.example.ecommerce.models.User;
 import com.example.ecommerce.repository.OrderItemRepository;
 import com.example.ecommerce.services.OrderItemService;
+import com.example.ecommerce.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.example.ecommerce.services.UserService;
+import java.security.Principal;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/orders/{orderId}/items")
+@RequestMapping("/api/orders/")
 public class OrderItemController {
     private final OrderItemService orderItemService;
+    private final UserService userService;
+    private final OrderService orderService;
 
     @Autowired
-    public OrderItemController(OrderItemService orderItemService) {
+    public OrderItemController(OrderItemService orderItemService, UserService userService, OrderService orderService) {
         this.orderItemService = orderItemService;
+        this.userService = userService;
+        this.orderService = orderService;
     }
 
     @GetMapping
-    public List<OrderItem> getOrderItems(@PathVariable Long orderId) {
-        return orderItemService.getItemsByOrderId(orderId);
+    public List<OrderItem> getCurrentUserCartItems(Principal principal) {
+        User currentUser = userService.findByEmail(principal.getName()).orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        Order cart = orderService.getOrCreateCartForUser(currentUser);
+        return orderItemService.getItemsByOrderId(cart.getId());
     }
 
     @PostMapping
-    public OrderItem addOrderItem(@PathVariable Long orderId, @RequestBody OrderItem orderItem) {
-        return orderItemService.addItemToOrder(orderId, orderItem);
+    public OrderItem addProductToCart(@RequestBody OrderItem orderItem, Principal principal) {
+        User currentUser = userService.findByEmail(principal.getName()).orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        Order cart = orderService.getOrCreateCartForUser(currentUser);
+        return orderItemService.addItemToOrder(cart.getId(), orderItem);
     }
 
-    @PutMapping("/{itemId}")
-    public ResponseEntity<OrderItem> updateOrderItem(@PathVariable Long orderId,
-                                                     @PathVariable Long itemId,
-                                                     @RequestBody OrderItem itemDetails) {
-
-        // TODO дополнительная проверка через orderId
+    @PutMapping("/items/{itemId}")
+    public ResponseEntity<OrderItem> updateCartItemQuantity(@PathVariable Long itemId, @RequestBody OrderItem itemDetails, Principal principal) {
+        User currentUser = userService.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
         try {
-            OrderItem updatedItem = orderItemService.updateItemQuantity(itemId, itemDetails.getQuantity());
+            OrderItem updatedItem = orderItemService.updateItemQuantity(itemId, itemDetails.getQuantity(), currentUser);
             return ResponseEntity.ok(updatedItem);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    @DeleteMapping("/{itemId}")
-    public ResponseEntity<Void> deleteOrderItem(@PathVariable Long orderId, @PathVariable Long itemId) {
+    @DeleteMapping("/items/{itemId}")
+    public ResponseEntity<Void> deleteCartItem(@PathVariable Long itemId, Principal principal) {
+        User currentUser = userService.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
         try {
-            orderItemService.deleteItem(itemId);
+            orderItemService.deleteItem(itemId, currentUser);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();

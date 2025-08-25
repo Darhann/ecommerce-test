@@ -3,13 +3,16 @@ package com.example.ecommerce.services;
 import com.example.ecommerce.models.Order;
 import com.example.ecommerce.models.OrderItem;
 import com.example.ecommerce.models.Product;
+import com.example.ecommerce.models.User;
 import com.example.ecommerce.repository.OrderItemRepository;
 import com.example.ecommerce.repository.OrderRepository;
 import com.example.ecommerce.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class OrderItemService {
@@ -42,18 +45,27 @@ public class OrderItemService {
         return orderItemRepository.save(item);
     }
 
-    public OrderItem updateItemQuantity(Long itemId, int quantity) {
+    public OrderItem updateItemQuantity(Long itemId, int quantity, User currentUser) {
         OrderItem item = orderItemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("OrderItem not found with id: " + itemId));
+
+        if (!Objects.equals(item.getOrder().getUser().getId(), currentUser.getId())) {
+            throw new AccessDeniedException("Вы не можете изменять позиции в чужом заказе");
+        }
+
         item.setQuantity(quantity);
         // TODO добавить логику пересчитывания цены
         return orderItemRepository.save(item);
     }
 
-    public void deleteItem(Long itemId) {
-        if (!orderItemRepository.existsById(itemId)) {
-            throw new RuntimeException("OrderItem not found with id: " + itemId);
+    public void deleteItem(Long itemId, User currentUser) {
+        OrderItem item = orderItemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("OrderItem not found with id: " + itemId));
+
+        if (!Objects.equals(item.getOrder().getUser().getId(), currentUser.getId())) {
+            throw new AccessDeniedException("Вы не можете удалять позиции из чужого заказа");
         }
+
         orderItemRepository.deleteById(itemId);
     }
 }

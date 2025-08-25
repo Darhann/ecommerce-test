@@ -2,10 +2,13 @@ package com.example.ecommerce.controllers;
 
 
 import com.example.ecommerce.models.Order;
+import com.example.ecommerce.models.User;
 import com.example.ecommerce.services.OrderService;
+import com.example.ecommerce.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.security.Principal;
 
 import java.util.List;
 
@@ -14,10 +17,12 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final UserService userService;
 
     @Autowired
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, UserService userService) {
         this.orderService = orderService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -44,6 +49,14 @@ public class OrderController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    public ResponseEntity<Order> getUserCart(Principal principal) {
+        User currentUser = userService.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Невозможно найти пользователя"));
+
+        Order cart = orderService.getOrCreateCartForUser(currentUser);
+        return ResponseEntity.ok(cart);
     }
 
 }
