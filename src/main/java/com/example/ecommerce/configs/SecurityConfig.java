@@ -44,7 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/products").permitAll()
                         .requestMatchers("/api/users/**", "/api/products/**").hasRole("ADMIN")
 
-                        .requestMatchers("/", "/home", "/login", "/register", "/products", "/cart").permitAll()
+                        .requestMatchers("/", "/home", "/login", "/register", "/products", "/cart", "/add-product").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/favicon.ico").permitAll()
 

@@ -25,4 +25,9 @@ public class WebPageController {
     public String cartPage() {
         return "cart"; // возвращает templates/cart.html
     }
+
+    @GetMapping("/add-product")
+    public String addProductPage() {
+        return "add-product"; // возвращает templates/add-product.html
+    }
 }

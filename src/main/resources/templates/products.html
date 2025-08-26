@@ -49,66 +49,55 @@
     const searchInput = document.getElementById('search-input');
     const sortSelect = document.getElementById('sort-select');
     const productsContainer = document.getElementById('products-container');
-
-    // Отслеживаем текущую страницу и общее количество страниц
     let currentPage = 0;
     let totalPages = 1;
 
-    // Основная функция для загрузки и отображения товаров
     function fetchAndRenderProducts() {
         const searchTerm = searchInput.value;
         const sortValue = sortSelect.value;
-
         let url = `/api/products?page=${currentPage}&size=9&sort=${sortValue}`;
         if (searchTerm) {
             url += `&search=${encodeURIComponent(searchTerm)}`;
         }
-
         productsContainer.innerHTML = '<p class="text-center">Загрузка...</p>';
-
         fetch(url)
             .then(response => response.json())
-            .then(pageData => { // Ответ от сервера теперь это объект Page
+            .then(pageData => {
                 productsContainer.innerHTML = '';
-                const products = pageData.content; // Сами товары лежат в поле content
+                const products = pageData.content;
                 totalPages = pageData.totalPages;
-
                 if (products.length === 0) {
                     productsContainer.innerHTML = '<p class="text-muted">Товары не найдены.</p>';
                 } else {
                     products.forEach(product => {
                         const imageUrl = product.imageUrl ? product.imageUrl : '/images/placeholder.png';
                         productsContainer.innerHTML += `
-                                <div class="col-md-4">
-                                    <div class="card product-card">
-                                        <img src="${imageUrl}" class="card-img-top product-image" alt="${product.name}">
-                                        <div class="card-body">
-                                            <h5 class="card-title">${product.name}</h5>
-                                            <p class="card-text">${product.description}</p>
-                                            <p><strong>Цена:</strong> $${product.price}</p>
-                                            <p><small class="text-muted" id="stock-${product.id}">На складе: ${product.stock}</small></p>
-                                            <button class="btn btn-primary mt-auto" onclick="addToCart(${product.id}, this)">Добавить в корзину</button>
-                                        </div>
+                            <div class="col-md-4">
+                                <div class="card product-card">
+                                    <img src="${imageUrl}" class="card-img-top product-image" alt="${product.name}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${product.name}</h5>
+                                        <p class="card-text">${product.description}</p>
+                                        <p><strong>Цена:</strong> $${product.price}</p>
+                                        <p><small class="text-muted" id="stock-${product.id}">На складе: ${product.stock}</small></p>
+                                        <button class="btn btn-primary mt-auto" onclick="addToCart(${product.id}, this)">Добавить в корзину</button>
                                     </div>
-                                </div>`;
+                                </div>
+                            </div>`;
                     });
                 }
                 updatePaginationControls(pageData);
             });
     }
 
-    // Новая функция для обновления кнопок пагинации
     function updatePaginationControls(pageData) {
         document.getElementById('page-info').textContent = `${pageData.number + 1} / ${pageData.totalPages}`;
-
         const prevButton = document.getElementById('prev-page-item');
         const nextButton = document.getElementById('next-page-item');
-
         pageData.first ? prevButton.classList.add('disabled') : prevButton.classList.remove('disabled');
         pageData.last ? nextButton.classList.add('disabled') : nextButton.classList.remove('disabled');
     }
 
-    // Новая функция для смены страницы
     function changePage(direction) {
         const newPage = currentPage + direction;
         if (newPage >= 0 && newPage < totalPages) {
@@ -117,7 +106,6 @@
         }
     }
 
-    // При поиске или сортировке сбрасываем на первую страницу
     function resetAndFetch() {
         currentPage = 0;
         fetchAndRenderProducts();
@@ -125,10 +113,55 @@
 
     searchInput.addEventListener('input', resetAndFetch);
     sortSelect.addEventListener('change', resetAndFetch);
-
     document.addEventListener('DOMContentLoaded', fetchAndRenderProducts);
 
-    // ... функция addToCart остается без изменений ...
+    // ===== ВОТ ЭТА ФУНКЦИЯ БЫЛА УДАЛЕНА =====
+    function addToCart(productId, button) {
+        const token = localStorage.getItem('jwt_token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+        const originalButtonText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = 'Добавляем...';
+        fetch('/api/cart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ productId: productId, quantity: 1 })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text || 'Не удалось добавить товар') });
+                }
+                return response.json();
+            })
+            .then(orderItem => {
+                const stockElement = document.getElementById('stock-' + productId);
+                if (stockElement) {
+                    stockElement.textContent = 'На складе: ' + orderItem.product.stock;
+                }
+                button.innerHTML = 'Добавлено ✓';
+                button.classList.remove('btn-primary');
+                button.classList.add('btn-success');
+                setTimeout(() => {
+                    button.innerHTML = originalButtonText;
+                    button.disabled = false;
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-primary');
+                }, 2000);
+            })
+            .catch(error => {
+                alert('Ошибка: ' + error.message);
+                button.innerHTML = originalButtonText;
+                button.disabled = false;
+            });
+    }
+    // ==========================================
 </script>
+<script th:src="@{/js/main.js}"></script>
 </body>
 </html>
