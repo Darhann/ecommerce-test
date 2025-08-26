@@ -51,6 +51,7 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/cart")
     public ResponseEntity<Order> getUserCart(Principal principal) {
         User currentUser = userService.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Невозможно найти пользователя"));

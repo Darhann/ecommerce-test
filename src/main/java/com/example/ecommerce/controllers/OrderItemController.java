@@ -5,10 +5,9 @@ package com.example.ecommerce.controllers;
 import com.example.ecommerce.models.Order;
 import com.example.ecommerce.models.OrderItem;
 import com.example.ecommerce.models.User;
-import com.example.ecommerce.repository.OrderItemRepository;
 import com.example.ecommerce.services.OrderItemService;
 import com.example.ecommerce.services.OrderService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.ecommerce.services.UserService;
@@ -17,18 +16,13 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/orders/")
+@RequestMapping("/api/cart")
+@RequiredArgsConstructor
 public class OrderItemController {
     private final OrderItemService orderItemService;
     private final UserService userService;
     private final OrderService orderService;
 
-    @Autowired
-    public OrderItemController(OrderItemService orderItemService, UserService userService, OrderService orderService) {
-        this.orderItemService = orderItemService;
-        this.userService = userService;
-        this.orderService = orderService;
-    }
 
     @GetMapping
     public List<OrderItem> getCurrentUserCartItems(Principal principal) {
