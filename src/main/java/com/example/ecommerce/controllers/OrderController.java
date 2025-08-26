@@ -1,6 +1,5 @@
 package com.example.ecommerce.controllers;
 
-
 import com.example.ecommerce.models.Order;
 import com.example.ecommerce.models.User;
 import com.example.ecommerce.services.OrderService;
@@ -8,8 +7,8 @@ import com.example.ecommerce.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.security.Principal;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -64,7 +63,6 @@ public class OrderController {
     public ResponseEntity<Order> checkoutCart(Principal principal) {
         User currentUser = userService.findByEmail(principal.getName()).orElseThrow(() -> new RuntimeException("Невозможно найти пользователя"));
 
-
         try {
             Order processedOrder = orderService.checkout(currentUser);
             return ResponseEntity.ok(processedOrder);
@@ -72,5 +70,4 @@ public class OrderController {
             return ResponseEntity.badRequest().body(null);
         }
     }
-
 }

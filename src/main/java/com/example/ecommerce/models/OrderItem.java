@@ -1,12 +1,12 @@
 package com.example.ecommerce.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.math.BigDecimal;
-
 
 @Data
 @NoArgsConstructor
@@ -21,6 +21,7 @@ public class OrderItem {
     @ToString.Exclude
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonBackReference
     private Order order;
 
     @ToString.Exclude
@@ -32,12 +33,4 @@ public class OrderItem {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
-
-
-    public OrderItem(Order order, Product product, int quantity, BigDecimal price) {
-        this.order = order;
-        this.product = product;
-        this.quantity = quantity;
-        this.price = price;
-    }
 }

@@ -3,6 +3,9 @@ package com.example.ecommerce.services;
 import com.example.ecommerce.models.Product;
 import com.example.ecommerce.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,8 +20,12 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public Page<Product> getAllProducts(String search, Pageable pageable) {
+        if (search != null && !search.trim().isEmpty()) {
+            return productRepository.findByNameContainingIgnoreCase(search, pageable);
+        } else {
+            return productRepository.findAll(pageable);
+        }
     }
 
     public Optional<Product> getProductById(Long id) {

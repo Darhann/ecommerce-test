@@ -1,5 +1,6 @@
 package com.example.ecommerce.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -33,16 +34,11 @@ public class Product {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @ToString.Exclude
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<OrderItem> items;
-
-    public Product(String name, String description, BigDecimal price, int stock, LocalDateTime createdAt, List<OrderItem> items) {
-        this.name = name;
-        this.description = description;
-        this.price = price;
-        this.stock = stock;
-        this.createdAt = createdAt;
-        this.items = items;
-    }
 }

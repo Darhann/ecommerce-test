@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,33 +22,46 @@ public class OrderItemService {
 
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
-    private  final ProductRepository productRepository;
-
+    private final ProductRepository productRepository;
 
     public List<OrderItem> getItemsByOrderId(Long orderId) {
-        return orderItemRepository.findByOrderId(orderId);
+        return orderItemRepository.findByOrderIdOrderByIdAsc(orderId);
     }
 
     @Transactional
-    public OrderItem addItemToOrder(Long orderId, OrderItem item) {
+    public OrderItem addItemToOrder(Long orderId, Long productId, int quantity) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
 
-        Product product = productRepository.findById(item.getProduct().getId())
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + item.getProduct().getId()));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
-        if (product.getStock() < item.getQuantity()) {
-            throw new RuntimeException("Недостаточно товара на складе. В налии: " + product.getStock());
+        if (product.getStock() < quantity) {
+            throw new RuntimeException("Недостаточно товара на складе. В наличии: " + product.getStock());
         }
 
-        product.setStock(product.getStock() - item.getQuantity());
+        Optional<OrderItem> existingItemOptional = order.getItems().stream()
+                .filter(item -> item.getProduct().getId().equals(productId))
+                .findFirst();
+
+        product.setStock(product.getStock() - quantity);
         productRepository.save(product);
 
-        item.setOrder(order);
-        item.setProduct(product);
-        item.setPrice(product.getPrice());
+        if (existingItemOptional.isPresent()) {
+            OrderItem existingItem = existingItemOptional.get();
+            existingItem.setQuantity(existingItem.getQuantity() + quantity);
+            return orderItemRepository.save(existingItem);
+        } else {
+            OrderItem newItem = new OrderItem();
+            newItem.setOrder(order);
+            newItem.setProduct(product);
+            newItem.setQuantity(quantity);
+            newItem.setPrice(product.getPrice());
 
-        return orderItemRepository.save(item);
+            order.getItems().add(newItem);
+
+            return orderItemRepository.save(newItem);
+        }
     }
 
     @Transactional

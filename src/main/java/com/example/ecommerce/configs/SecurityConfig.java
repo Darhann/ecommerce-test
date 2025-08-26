@@ -43,6 +43,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/products").permitAll()
                         .requestMatchers("/api/users/**", "/api/products/**").hasRole("ADMIN")
+
+                        .requestMatchers("/", "/home", "/login", "/register", "/products", "/cart").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/favicon.ico").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions

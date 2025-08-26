@@ -1,18 +1,17 @@
 package com.example.ecommerce.controllers;
 
-
-
+import com.example.ecommerce.dto.AddItemRequest;
 import com.example.ecommerce.models.Order;
 import com.example.ecommerce.models.OrderItem;
 import com.example.ecommerce.models.User;
 import com.example.ecommerce.services.OrderItemService;
 import com.example.ecommerce.services.OrderService;
+import com.example.ecommerce.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.example.ecommerce.services.UserService;
-import java.security.Principal;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -23,7 +22,6 @@ public class OrderItemController {
     private final UserService userService;
     private final OrderService orderService;
 
-
     @GetMapping
     public List<OrderItem> getCurrentUserCartItems(Principal principal) {
         User currentUser = userService.findByEmail(principal.getName()).orElseThrow(() -> new RuntimeException("Пользователь не найден"));
@@ -32,10 +30,10 @@ public class OrderItemController {
     }
 
     @PostMapping
-    public OrderItem addProductToCart(@RequestBody OrderItem orderItem, Principal principal) {
+    public OrderItem addProductToCart(@RequestBody AddItemRequest addItemRequest, Principal principal) {
         User currentUser = userService.findByEmail(principal.getName()).orElseThrow(() -> new RuntimeException("Пользователь не найден"));
         Order cart = orderService.getOrCreateCartForUser(currentUser);
-        return orderItemService.addItemToOrder(cart.getId(), orderItem);
+        return orderItemService.addItemToOrder(cart.getId(), addItemRequest.getProductId(), addItemRequest.getQuantity());
     }
 
     @PutMapping("/items/{itemId}")
@@ -61,16 +59,4 @@ public class OrderItemController {
             return ResponseEntity.notFound().build();
         }
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-

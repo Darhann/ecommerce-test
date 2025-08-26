@@ -1,5 +1,6 @@
 package com.example.ecommerce.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,12 +31,6 @@ public class Order {
 
     @ToString.Exclude
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<OrderItem> items;
-
-    public Order(User user, LocalDateTime createdAt, String status, List<OrderItem> items) {
-        this.user = user;
-        this.createdAt = createdAt;
-        this.status = status;
-        this.items = items;
-    }
 }

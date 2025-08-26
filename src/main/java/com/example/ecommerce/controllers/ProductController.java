@@ -3,11 +3,13 @@ package com.example.ecommerce.controllers;
 import com.example.ecommerce.models.Product;
 import com.example.ecommerce.services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
@@ -21,8 +23,23 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<Product> getAllProducts() {
-        return productService.getAllProducts();
+    public Page<Product> getAllProducts(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "default") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size) {
+
+        // ИЗМЕНЕНИЕ: Тип переменной исправлен на Sort
+        Sort sortOrder = Sort.unsorted();
+        if (sort != null && !sort.equals("default")) {
+            String[] parts = sort.split(",");
+            String property = parts[0];
+            Sort.Direction direction = parts.length > 1 ? Sort.Direction.fromString(parts[1]) : Sort.Direction.ASC;
+            sortOrder = Sort.by(direction, property);
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+        return productService.getAllProducts(search, pageable);
     }
 
     @GetMapping("/{id}")
