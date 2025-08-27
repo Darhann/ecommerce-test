@@ -8,26 +8,26 @@ public class WebPageController {
 
     @GetMapping({"/", "/home", "/products"})
     public String productsPage() {
-        return "products"; // возвращает templates/products.html
+        return "products";
     }
 
     @GetMapping("/login")
     public String loginPage() {
-        return "login"; // возвращает templates/login.html
+        return "login";
     }
 
     @GetMapping("/register")
     public String registerPage() {
-        return "register"; // возвращает templates/register.html
+        return "register";
     }
 
     @GetMapping("/cart")
     public String cartPage() {
-        return "cart"; // возвращает templates/cart.html
+        return "cart";
     }
 
     @GetMapping("/add-product")
     public String addProductPage() {
-        return "add-product"; // возвращает templates/add-product.html
+        return "add-product";
     }
 }
