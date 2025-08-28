@@ -29,7 +29,6 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "9") int size) {
 
-        // ИЗМЕНЕНИЕ: Тип переменной исправлен на Sort
         Sort sortOrder = Sort.unsorted();
         if (sort != null && !sort.equals("default")) {
             String[] parts = sort.split(",");
